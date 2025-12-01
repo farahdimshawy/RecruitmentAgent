@@ -141,7 +141,7 @@ def gem_json(text: str) -> Dict[str, Any]:
 # --- PIPELINE BUILDER ---
 DOCUMENT_INDEX_NAME = os.environ.get("DOCS_INDEX_NAME") 
 
-def build_document_corpus(csv_filepath: str, resume_col: str, id_col: str, limit: int = 20):
+def build_document_corpus(csv_filepath: str, resume_col: str, id_col: str, limit: int = 100):
     """
     Reads CSV, extracts rich data using gem_json, formats into a text chunk 
     (Augmented Chunking), and embeds into the Document Corpus index.
@@ -213,7 +213,7 @@ def build_document_corpus(csv_filepath: str, resume_col: str, id_col: str, limit
 if __name__ == "__main__":
     # --- CONFIGURATION ---
     # Ensure you have a 'rag_corpus_resumes.csv' file available
-    CSV_FILE = "./data/rag_corpus/rag_corpus.csv" 
+    CSV_FILE = "./data/rag_corpus/tech_corpus.csv" 
     # Change these strings to match the column names in your CSV file
     RESUME_TEXT_COLUMN = "text"
     ID_COLUMN = "id"

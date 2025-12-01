@@ -81,11 +81,13 @@ def add_document(id: str, content: str, metadata: Dict[str, Any] = None, index_n
         return
 
     try:
-        # 1. Generate Embedding using the stable `embed_documents` pattern
-        # This returns a list of vectors, so we take the first one [0]
+        
         embedding = embeddings.embed_query(content)
-        # 3. Upsert to Pinecone
-        index.upsert(vectors=[(id, embedding, {"content": content})])
+        
+        final_metadata = metadata if metadata else {}
+        final_metadata["content"] = content
+
+        index.upsert(vectors=[(id, embedding, final_metadata)])
         
     except Exception as e:
         print(f"ERROR: Failed to embed or upsert document {id} to {index_name}. Error: {e}")
