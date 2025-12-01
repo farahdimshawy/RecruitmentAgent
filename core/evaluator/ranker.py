@@ -1,29 +1,128 @@
-import os
-from typing import List, Dict, Any, Tuple
 from core.rag.vectorstore import retrieve_vector_data, RECRUITMENT_DOCS_INDEX_NAME
 from core.evaluator.skill_matcher import get_matching_skills
+from core.utils.helpers import model, extract_name_and_summary
 
-def rank_candidates(job_description_text: str, k: int = 5) -> List[Dict]:
+from typing import List, Dict, Optional
+import google.generativeai as genai
+
+EMBEDDING_MODEL_NAME = 'gemini-embedding-001'
+
+def rank_local_candidates(job_description_text: str, candidate_docs: List[str], k: int = 5) -> List[Dict]:
     """
-    Executes the two-stage RAG pipeline:
-    1. Retrieves relevant skills (Skill IDs) from the skills-index using the JD.
-    2. Constructs a dense query from those skill definitions.
-    3. Retrieves and ranks candidates from the recruitment-docs index using the dense query.
+    Ranks local candidate documents against the JD using a two-stage process
+    (Skill Extraction/Query and Semantic Ranking). This process is executed entirely
+    in-memory without querying the persistent vector database.
+
+    Args:
+        job_description_text (str): The Job Description text.
+        candidate_docs (List[str]): Raw text of local CVs/resumes.
+        k (int): The number of top candidates to return.
+
+    Returns:
+        List[Dict]: A ranked list of candidate matches.
+    """
+    
+    if not candidate_docs:
+        print("[RANKER - LOCAL] No candidate documents provided.")
+        return []
+
+    print(f"\n[RANKER - LOCAL] Processing {len(candidate_docs)} local documents.")
+    
+    # 1. Generate the Skill-Target Query from the JD
+    skill_extraction_prompt = f"""
+    Analyze the following Job Description and identify the top 5 most critical technical skills, 
+    key responsibilities, and required experience areas. Combine these points into a single, 
+    dense query paragraph suitable for semantic search that will prioritize candidates based 
+    on relevance to the JD.
+
+    JOB DESCRIPTION:
+    ---
+    {job_description_text}
+    ---
+    """
+    
+    query_response = model.generate_content(
+        contents=[skill_extraction_prompt],
+        generation_config={"temperature": 0.1} 
+    )
+    skill_query_text = query_response.text.strip()
+    print(f"[RANKER - LOCAL] Generated Target Query: '{skill_query_text[:80]}...'")
+    
+    embed_model_client = genai()
+    
+    query_embedding = embed_model_client.embed_content(
+        model=EMBEDDING_MODEL_NAME, 
+        content=skill_query_text
+    )['embedding']
+
+    # Embed all documents
+    document_embeddings = embed_model_client.embed_content(
+        model=EMBEDDING_MODEL_NAME, 
+        content=candidate_docs
+    )['embedding']
+
+
+    # 3. Calculate Cosine Similarity and Rank
+    ranked_candidates = []
+    
+    import numpy as np
+
+    q = np.array(query_embedding)                    
+    docs = np.array(document_embeddings)            
+    scores = docs @ q                                
+
+    ranked_candidates = []
+
+    for i, (doc_text, score) in enumerate(zip(candidate_docs, scores)):
+        
+        candidate_id = f"local-doc-{i+1}"
+
+        # Extract metadata (unchanged)
+        name, summary = extract_name_and_summary(doc_text, doc_id=candidate_id)
+
+        # Scale similarity to percentage and clamp between 0–100
+        normalized_score = max(0, min(100, score * 100))
+
+        ranked_candidates.append({
+            'rank': 0,   # filled after sorting
+            'id': candidate_id,
+            'name': name,
+            'match_score': normalized_score,
+            'summary': summary
+        })
+        
+    # Sort and Assign Final Ranks
+    ranked_candidates.sort(key=lambda x: x['match_score'], reverse=True)
+    for i, candidate in enumerate(ranked_candidates):
+        candidate['rank'] = i + 1
+        
+    return ranked_candidates[:k]
+
+
+def rank_candidates(job_description_text: str, k: int = 5, candidate_docs: Optional[List[str]] = None) -> List[Dict]:
+    """
+    Executes the two-stage RAG pipeline, either against the vector database
+    or against locally provided candidate documents.
 
     Args:
         job_description_text (str): The raw text of the Job Description.
         k (int): The number of top candidates to return.
+        candidate_docs (Optional[List[str]]): List of raw CV texts for local ranking mode.
 
     Returns:
-        List[Dict]: A ranked list of candidate matches, including their ID, 
-                    score, and a summary of their profile.
+        List[Dict]: A ranked list of candidate matches.
     """
     
+    # MODE 1: LOCAL FILES RANKING
+    if candidate_docs is not None:
+        return rank_local_candidates(job_description_text, candidate_docs, k)
+    
+    # MODE 2: DATABASE RANKING (Existing Logic)
+    
     # --- Stage 1: Skill Retrieval (using the function from skill_matcher.py) ---
-    # We use a threshold of 0.70 to ensure we capture a good range of skills.
     matching_skills = get_matching_skills(
         job_description_text=job_description_text, 
-        k=15, # Retrieve more skills initially
+        k=15, 
         score_threshold=0.70
     )
 
@@ -32,19 +131,14 @@ def rank_candidates(job_description_text: str, k: int = 5) -> List[Dict]:
         return []
 
     # --- Stage 2: Construct Skill-Target Query ---
-    # Combine the content (definitions) of all high-scoring skills into one dense query string.
     skill_contents = [skill['content'] for skill in matching_skills]
     skill_ids_list = [skill['id'] for skill in matching_skills]
-    
-    # Create a dense, focused query by concatenating the skill definitions
     skill_query_text = " ".join(skill_contents)
     
     print(f"\n[RANKER] Identified Skills: {', '.join(skill_ids_list)}")
     print(f"[RANKER] Querying Candidate Index with {len(skill_contents)} skill definitions.")
 
     # --- Stage 3: Candidate Retrieval and Ranking ---
-    
-    # Use the dense skill query text to find candidates in the recruitment-docs index
     results = retrieve_vector_data(
         query=skill_query_text,
         k=k, # Return the final top K candidates
@@ -66,7 +160,7 @@ def rank_candidates(job_description_text: str, k: int = 5) -> List[Dict]:
         score = match['score']
         candidate_summary = match['metadata'].get('content', 'No summary defined.')
 
-        # Extract Candidate Name (assuming the chunk format from document_corpus.py)
+        # Extract candidate name from the summary (simple heuristic)
         name = "Unknown"
         summary_lines = candidate_summary.split('\n')
         for line in summary_lines:
@@ -78,43 +172,8 @@ def rank_candidates(job_description_text: str, k: int = 5) -> List[Dict]:
             'rank': i + 1,
             'id': candidate_id,
             'name': name,
-            'match_score': score,
+            'match_score': score * 100, # Assuming vector scores are normalized (0 to 1)
             'summary': candidate_summary 
         })
         
     return ranked_candidates
-
-# --- Example Usage for Testing ---
-if __name__ == "__main__":
-    
-    # Example Job Description: Focuses on Data and ML Engineering
-    SAMPLE_JD = """
-    We are seeking a Senior Data Scientist skilled in deep learning, 
-    Natural Language Processing (NLP), and deploying LLM applications. 
-    The ideal candidate has strong Python engineering skills, specifically
-    for creating scalable data pipelines, and experience with vector databases
-    for Retrieval-Augmented Generation (RAG) systems. Must know MLOps and cloud deployment practices.
-    """
-    
-    print("===================================================================")
-    print(">>> Starting Candidate Ranking for JD: Senior Data Scientist <<<")
-    print("===================================================================")
-    
-    top_candidates = rank_candidates(SAMPLE_JD, k=5)
-    
-    if top_candidates:
-        print("\nRANKING SUCCESSFUL: TOP CANDIDATES")
-        print("--------------------------------------------------------------------------------")
-        print(f"{'Rank':<5} | {'Match Score':<12} | {'ID':<15} | {'Candidate Name'}")
-        print("--------------------------------------------------------------------------------")
-        
-        for candidate in top_candidates:
-            print(f"{candidate['rank']:<5} | {candidate['match_score']:.4f}{'<-- HIGH MATCH' if candidate['match_score'] > 0.8 else '' :<12} | {candidate['id']:<15} | {candidate['name']}")
-        
-        # Optionally show the summary of the top candidate
-        print("\n[SUMMARY OF TOP CANDIDATE (Rank 1)]")
-        print(top_candidates[0]['summary'])
-        
-        print("===================================================================")
-    else:
-        print("\nRANKING FAILED: Could not match candidates to the Job Description.")

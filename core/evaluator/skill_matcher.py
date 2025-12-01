@@ -1,7 +1,4 @@
-import os
-from typing import List, Dict, Tuple
-
-# Import the necessary retrieval function and index constant
+from typing import List, Dict
 from core.rag.vectorstore import retrieve_vector_data, SKILLS_INDEX_NAME
 
 def get_matching_skills(job_description_text: str, k: int = 10, score_threshold: float = 0.65) -> List[Dict]:
@@ -62,7 +59,7 @@ def get_matching_skills(job_description_text: str, k: int = 10, score_threshold:
         print(f"An error occurred during skill retrieval: {e}")
         return []
 
-# --- Example Usage for Testing ---
+
 if __name__ == "__main__":
     
     # Example Job Description: Focuses on Data and ML Engineering

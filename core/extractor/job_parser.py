@@ -2,8 +2,7 @@ from core.utils.helpers import model
 from core.utils.to_native import to_native
 
 from google.generativeai.types import FunctionDeclaration, Tool
-from google.protobuf.json_format import MessageToDict
-import json
+
 
 def gem_json_job(job_text):
     """

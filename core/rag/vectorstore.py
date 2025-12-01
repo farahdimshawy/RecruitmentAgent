@@ -8,12 +8,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- CONFIGURATION ---
-# Load all necessary environment variables first
 PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY")
 GEMINI_API_KEY = os.environ.get("GOOGLE_API_KEY") 
 
-RECRUITMENT_DOCS_INDEX_NAME = os.environ.get("DOCS_INDEX_NAME", "recruitment-docs")
-SKILLS_INDEX_NAME = os.environ.get("SKILLS_INDEX_NAME", "skills-index")
+RECRUITMENT_DOCS_INDEX_NAME = os.environ.get("DOCS_INDEX_NAME")
+SKILLS_INDEX_NAME = os.environ.get("SKILLS_INDEX_NAME")
 DEFAULT_INDEX_NAME = RECRUITMENT_DOCS_INDEX_NAME
 
 EMBED_DIM = 3072 # Gemini embedding dimension

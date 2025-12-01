@@ -1,15 +1,8 @@
-import json
-from typing import Dict, List, Any
+from typing import Dict, Any
 import time
 
-# --- Imports from your environment ---
-# CRITICAL: Import the SKILLS_INDEX_NAME constant
 from core.rag.vectorstore import add_document, SKILLS_INDEX_NAME 
 
-# --- Data Definition: Domain-Segmented Canonical Skills ---
-
-# We define skills grouped by domain AND sub_domain for granular filtering. 
-# Weights reflect the typical importance of the skill for that specific sub-domain (0.0 to 1.0).
 DOMAIN_CANONICAL_SKILLS: Dict[str, Dict[str, Dict[str, Any]]] = {
     
     # 1. TECHNOLOGY DOMAIN
