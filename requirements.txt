@@ -14,11 +14,11 @@ pinecone>=8.0.0
 langchain>=0.2.0 
 langchain-core>=0.2.0
 langchain-pinecone>=0.2.3  
-langchain-google-genai>=3.2.0 
+langchain-google-genai>=3.2.0
 
 # --- Google Generative AI ---
 # The primary, current SDK for the Gemini API, fully supports 3.12.
-google-generativeai>=0.11.0 
+google-genai>=1.0.0
 google-api-core>=2.17.0
 
 # --- Utilities ---
