@@ -1,7 +1,7 @@
 import os
 from pinecone import Pinecone, ServerlessSpec
 from typing import Dict, Any, Union
-from langchain_pinecone import PineconeVectorStore
+
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from dotenv import load_dotenv
 
