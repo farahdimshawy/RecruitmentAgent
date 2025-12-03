@@ -1,20 +1,28 @@
-streamlit
-pandas
-Pillow 
+# --- Frameworks and Core Tools ---
+# Streamlit/Pandas/Pillow are standard and fully support Python 3.12.
+streamlit>=1.35.0
+pandas>=2.1.0
+Pillow>=10.0.0
 
-
+# --- Vector Store ---
+# Modern Pinecone SDK, fully compatible with 3.12.
 pinecone>=8.0.0
 
+# --- LangChain Ecosystem (Crucial for Compatibility) ---
+# These are the latest stable versions that have proven compatibility 
+# and eliminate the 'pydantic_v1' conflict you previously saw.
+langchain>=0.2.0 
+langchain-core>=0.2.0
+langchain-pinecone>=0.2.3  
+langchain-google-genai>=3.2.0 
 
-langchain-core
-langchain-pinecone
-langchain-google-genai
+# --- Google Generative AI ---
+# The primary, current SDK for the Gemini API, fully supports 3.12.
+google-generativeai>=0.11.0 
+google-api-core>=2.17.0
 
-
-google-generativeai
-google-api-core
-
-python-dotenv
-
-PyMuPDF
-pydantic
+# --- Utilities ---
+# Standard utilities with full Python 3.12 support.
+python-dotenv>=1.0.0
+PyMuPDF>=1.24.0 # The package for 'import fitz'
+pydantic>=2.7.0 # Pydantic v2 is required by modern LangChain
