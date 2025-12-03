@@ -2,33 +2,31 @@
 from core.rag.vectorstore import (
     add_document,
     retrieve_vector_data,
-    # _get_or_create_index, # Not needed for this test
     clear_index,
-    DEFAULT_INDEX_NAME # Import the default index name
+    DEFAULT_INDEX_NAME
 )
 import time
 from itertools import islice
 import pandas as pd
 import pinecone
-import uuid # Needed to generate unique IDs for upsert
+import uuid 
 
 print("\n--- TESTING VECTORSTORE WITH CSV RESUMES ---")
 
-# 1. Clear index so the test is clean
-# You need to pass the index name to clear_index
+
 INDEX_TO_USE = DEFAULT_INDEX_NAME
-try:
-    clear_index(INDEX_TO_USE) 
-    print(f"Index '{INDEX_TO_USE}' cleared.")
-except pinecone.exceptions.NotFoundException:
-    print(f"Index '{INDEX_TO_USE}' not found, nothing to delete.")
-except Exception as e:
-    # Handle the case where the index doesn't exist but the client throws a different error
-    print(f"An error occurred while clearing the index: {e}")
+# try:
+#     clear_index(INDEX_TO_USE) 
+#     print(f"Index '{INDEX_TO_USE}' cleared.")
+# except pinecone.exceptions.NotFoundException:
+#     print(f"Index '{INDEX_TO_USE}' not found, nothing to delete.")
+# except Exception as e:
+#     # Handle the case where the index doesn't exist but the client throws a different error
+#     print(f"An error occurred while clearing the index: {e}")
 
 
 # 2. Load CSVs and create documents
-csv_files = ["./data/rag_corpus/rag_corpus.csv"]
+csv_files = ["./data/rag_corpus/tech_corpus.csv"]
 all_docs = []
 
 for file in csv_files:
@@ -64,13 +62,7 @@ print(f"\nTotal documents to add: {len(all_docs)}")
 BATCH_SIZE = 2
 DELAY_SECONDS = 7 
 
-# Using a generator to iterate over the entire document list in chunks
-# The current add_document in vectorstore.py only supports single documents, 
-# so we will iterate through the documents one by one using a simple loop.
-# BATCH_SIZE will now control the 'pause' frequency.
-
-# We'll limit the total documents to 50 for a quick test
-doc_limit = 50
+doc_limit = 100
 documents_to_process = all_docs[:doc_limit]
 print(f"Processing {len(documents_to_process)} documents individually...")
 
@@ -104,12 +96,11 @@ query = "data science with python"
 results = retrieve_vector_data(query, k=3, index_name=INDEX_TO_USE) 
 
 print("\nTop Results for query:", query)
-# The results are now the raw Pinecone response structure
+
 for i, match in enumerate(results.get("matches", [])):
-    # The content is stored in the metadata field named "content" in your vectorstore.py
+    
     content = match.get('metadata', {}).get('content', 'Content not found.')
     score = match.get('score', 0.0)
     
     print(f"\n{i+1}. Score: {score:.4f}")
-    # Print the first 120 characters of the retrieved content
     print(f"   Content: {content[:200]}...")

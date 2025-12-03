@@ -130,7 +130,7 @@ def run_ranking(job_description_text: str, top_k: int, candidate_docs: Optional[
         ranked_candidates_list = rank_candidates(
             job_description_text, 
             k=top_k, 
-            candidate_docs=candidate_docs # NEW ARGUMENT
+            candidate_docs=candidate_docs 
         )
         
         if ranked_candidates_list:
@@ -163,8 +163,6 @@ def main():
 
 
     candidate_texts = None
-    
-    # --- NEW: CV Upload Section ---
     if data_source_mode == "Upload Local CVs/Resumes":
         st.subheader("A. Upload Candidate CVs")
         cv_files = st.file_uploader(

@@ -48,7 +48,7 @@ def rank_local_candidates(job_description_text: str, candidate_docs: List[str], 
     skill_query_text = query_response.text.strip()
     print(f"[RANKER - LOCAL] Generated Target Query: '{skill_query_text[:80]}...'")
     
-    embed_model_client = genai()
+    embed_model_client = genai
     
     query_embedding = embed_model_client.embed_content(
         model=EMBEDDING_MODEL_NAME, 
@@ -70,8 +70,6 @@ def rank_local_candidates(job_description_text: str, candidate_docs: List[str], 
     q = np.array(query_embedding)                    
     docs = np.array(document_embeddings)            
     scores = docs @ q                                
-
-    ranked_candidates = []
 
     for i, (doc_text, score) in enumerate(zip(candidate_docs, scores)):
         
@@ -172,7 +170,7 @@ def rank_candidates(job_description_text: str, k: int = 5, candidate_docs: Optio
             'rank': i + 1,
             'id': candidate_id,
             'name': name,
-            'match_score': score * 100, # Assuming vector scores are normalized (0 to 1)
+            'match_score': score * 100, 
             'summary': candidate_summary 
         })
         

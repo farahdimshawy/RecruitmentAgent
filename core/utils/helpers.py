@@ -3,16 +3,28 @@ import os
 from typing import Tuple
 from dotenv import load_dotenv
 
+# Load environment variables from .env file
 load_dotenv()
 
-
+# --- Configuration ---
+# API Key is retrieved from the environment variables
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 if not GOOGLE_API_KEY:
+    # NOTE: The Canvas environment usually handles the API key, but we ensure it's configured.
     print("Warning: GOOGLE_API_KEY not found. Ensure environment is configured.")
 genai.configure(api_key=GOOGLE_API_KEY)
 
 # Initialize the main model for content generation
 model = genai.GenerativeModel('gemini-2.5-flash')
+
+# --- Helper Functions ---
+
+def get_embedding_client():
+    """
+    Returns the configured Gemini Embedding Model client instance.
+    Aligned with the user's vector store configuration ('gemini-embedding-001').
+    """
+    return genai
 
 def extract_name_and_summary(doc_text: str, doc_id: str) -> Tuple[str, str]:
     """
@@ -66,3 +78,5 @@ def extract_name_and_summary(doc_text: str, doc_id: str) -> Tuple[str, str]:
         name = doc_text.split('\n')[0].strip() if doc_text else f"Candidate {doc_id}"
         summary = "LLM extraction failed. Using heuristic fallback."
         return name, summary
+
+# You may add other helper functions (e.g., chunking, logging) here later.

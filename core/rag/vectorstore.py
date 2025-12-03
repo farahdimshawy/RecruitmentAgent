@@ -21,14 +21,14 @@ EMBEDDINGS_MODEL = "models/gemini-embedding-001"
 
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
-# Initialize Embeddings (This relies on GEMINI_API_KEY being set)
+
 embeddings = GoogleGenerativeAIEmbeddings(model=EMBEDDINGS_MODEL)
 
 print("Pinecone client and Embeddings initialized successfully.")
 
 
 
-# --- HELPER FUNCTION: Get or Create Index ---
+
 def _get_or_create_index(name: str) -> Union[Any, None]:
     """
     Checks if an index exists and returns it, or creates it if missing.
@@ -40,7 +40,7 @@ def _get_or_create_index(name: str) -> Union[Any, None]:
     if not name:
         print("Error: Index name cannot be empty.")
         return None
-    indexes = pc.list_indexes()    # returns {'indexes': [{'name': 'xxx'}]}
+    indexes = pc.list_indexes()    
     existing = [i["name"] for i in indexes.get("indexes", [])]
 
     if name not in existing:
@@ -74,7 +74,6 @@ def add_document(id: str, content: str, metadata: Dict[str, Any] = None, index_n
         return
 
     index = _get_or_create_index(index_name)
-    vector_store = PineconeVectorStore(index=index, embedding=embeddings)
     if index is None:
         print(f"Failed to connect to index {index_name}. Upsert aborted.")
         return
@@ -82,7 +81,6 @@ def add_document(id: str, content: str, metadata: Dict[str, Any] = None, index_n
     try:
         
         embedding = embeddings.embed_query(content)
-        
         final_metadata = metadata if metadata else {}
         final_metadata["content"] = content
 
