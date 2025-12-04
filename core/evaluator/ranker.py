@@ -3,7 +3,7 @@ from core.evaluator.skill_matcher import get_matching_skills
 from core.utils.helpers import model, extract_name_and_summary
 
 from typing import List, Dict, Optional
-import google.generativeai as genai
+from langchain_google_genai import GoogleGenerativeAIEmbeddings as genai
 
 EMBEDDING_MODEL_NAME = 'gemini-embedding-001'
 

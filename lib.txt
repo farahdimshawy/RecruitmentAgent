@@ -19,7 +19,7 @@ from google.api_core.exceptions import GoogleAPIError
 from dotenv import load_dotenv
 
 from typing import List, Dict, Optional
-from langchain_google_genai import GoogleGenAIEmbeddings as genai
+from langchain_google_genai import GoogleGenerativeAIEmbeddings as genai
 from typing import List, Dict
 from typing import Dict, Any
 import time
