@@ -1,4 +1,5 @@
 from langchain_google_genai import GoogleGenerativeAIEmbeddings as genai
+from langchain_google_genai import ChatGoogleGenerativeAI
 import os
 from typing import Tuple
 from dotenv import load_dotenv
@@ -12,11 +13,15 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 if not GOOGLE_API_KEY:
     # NOTE: The Canvas environment usually handles the API key, but we ensure it's configured.
     print("Warning: GOOGLE_API_KEY not found. Ensure environment is configured.")
-genai.configure(api_key=GOOGLE_API_KEY)
+#genai.configure(api_key=GOOGLE_API_KEY)
 
 # Initialize the main model for content generation
-model = genai.GenerativeModel('gemini-2.5-flash')
 
+model = ChatGoogleGenerativeAI(
+    model="gemini-2.5-flash",
+    # Pass the key here as a keyword argument
+    api_key=GOOGLE_API_KEY
+)
 # --- Helper Functions ---
 
 def get_embedding_client():
