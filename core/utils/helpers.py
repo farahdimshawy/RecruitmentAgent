@@ -1,4 +1,4 @@
-import google.generativeai as genai
+from langchain_google_genai import GoogleGenAIEmbeddings as genai
 import os
 from typing import Tuple
 from dotenv import load_dotenv

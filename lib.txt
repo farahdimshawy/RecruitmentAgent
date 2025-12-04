@@ -1,0 +1,47 @@
+import os
+from pinecone import Pinecone, ServerlessSpec
+from typing import Dict, Any, Union
+from langchain_pinecone import PineconeVectorStore
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from dotenv import load_dotenv
+
+import streamlit as st
+import pandas as pd
+import sys
+import os
+from typing import List, Dict, Optional
+import os
+import time
+from typing import Dict, Any
+
+from google.api_core.exceptions import GoogleAPIError
+
+from dotenv import load_dotenv
+
+from typing import List, Dict, Optional
+from langchain_google_genai import GoogleGenAIEmbeddings as genai
+from typing import List, Dict
+from typing import Dict, Any
+import time
+from google.generativeai.types import FunctionDeclaration, Tool
+import fitz  
+import pandas as pd
+import os
+import time
+from typing import Dict, Any
+
+
+from google.generativeai.types import FunctionDeclaration, Tool
+import os
+from typing import List, Dict, Any
+
+from langchain_core.documents import Document
+from typing import Dict, Any
+import time
+import time
+from itertools import islice
+import pandas as pd
+import pinecone
+import uuid 
+import pinecone
+

@@ -1,6 +1,9 @@
 from core.utils.helpers import model
 from core.utils.to_native import to_native
-from google.generativeai.types import FunctionDeclaration, Tool
+from langchain_core.pydantic_v1 import BaseModel, Field
+from typing import List, Optional
+# If you are using the Gemini model, you'll need this:
+from langchain_google_genai import ChatGoogleGenerativeAI
 from typing import Dict, Any
 import time
 
