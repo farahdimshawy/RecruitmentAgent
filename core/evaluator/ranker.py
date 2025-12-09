@@ -46,7 +46,7 @@ def rank_local_candidates(job_description_text: str, candidate_docs: List[str], 
     print(f"[RANKER - LOCAL] Generated Target Query: '{skill_query_text[:80]}...'")
     
     embed_model_client = genai(
-    model="models/embedding-001"
+    model=EMBEDDING_MODEL_NAME
 )
     
     query_embedding =embed_model_client.embed_query(skill_query_text)
