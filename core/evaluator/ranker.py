@@ -6,6 +6,13 @@ from typing import List, Dict, Optional
 from langchain_google_genai import GoogleGenerativeAIEmbeddings as genai
 from langchain_openai import OpenAIEmbeddings
 
+import time
+
+# Define your desired batch size (e.g., 50 documents at a time)
+BATCH_SIZE = 50 
+# Define a small delay (e.g., 1 second) to ensure limits are not breached
+DELAY_SECONDS = 1 
+
 
 EMBEDDING_MODEL_NAME = "text-embedding-3-large"
 
@@ -54,7 +61,19 @@ def rank_local_candidates(job_description_text: str, candidate_docs: List[str], 
     query_embedding =embed_model_client.embed_query(skill_query_text)
 
     # Embed all documents
-    document_embeddings = embed_model_client.embed_documents(candidate_docs)
+    document_embeddings = []
+
+    for i in range(0, len(candidate_docs), BATCH_SIZE):
+        batch = candidate_docs[i:i + BATCH_SIZE]
+        
+        # ⚠️ This is the line that calls the OpenAI API for a batch
+        batch_embeddings = embed_model_client.embed_documents(batch)
+        document_embeddings.extend(batch_embeddings)
+        
+        print(f"Embedded documents {i} to {i + len(batch)}. Waiting...")
+        # Wait to avoid hitting the RPM/TPM limit
+    time.sleep(DELAY_SECONDS)
+    #document_embeddings = embed_model_client.embed_documents(candidate_docs)
 
 
     # 3. Calculate Cosine Similarity and Rank
