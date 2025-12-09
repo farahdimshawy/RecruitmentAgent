@@ -63,10 +63,8 @@ def generate_outreach_email(job_description: str, candidate_data: Dict[str, Any]
             {"role": "system", "parts": [system_prompt]}
         ])
 
-            response = model.generate_content(
-                contents=[user_prompt],
-                # Set temperature low for professional, non-creative tone
-                generation_config={"temperature": 0.3} 
+            response = model.invoke(
+                user_prompt
             )
 
             # Clean up the output slightly

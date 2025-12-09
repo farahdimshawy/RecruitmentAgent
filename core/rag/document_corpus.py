@@ -8,10 +8,6 @@ from core.utils.to_native import to_native
 from core.rag.vectorstore import add_document 
 from core.extractor.cv_parser import cv_parser
 
-from google.generativeai.types import FunctionDeclaration, Tool
-
-
-
 DOCUMENT_INDEX_NAME = os.environ.get("DOCS_INDEX_NAME") 
 
 def build_document_corpus(csv_filepath: str, resume_col: str, id_col: str, limit: int = 100):
