@@ -41,25 +41,18 @@ def rank_local_candidates(job_description_text: str, candidate_docs: List[str], 
     ---
     """
     
-    query_response = model.generate_content(
-        contents=[skill_extraction_prompt],
-        generation_config={"temperature": 0.1} 
-    )
+    query_response = model.invoke(skill_extraction_prompt)
     skill_query_text = query_response.text.strip()
     print(f"[RANKER - LOCAL] Generated Target Query: '{skill_query_text[:80]}...'")
     
-    embed_model_client = genai
+    embed_model_client = genai(
+    model="models/embedding-001"
+)
     
-    query_embedding = embed_model_client.embed_content(
-        model=EMBEDDING_MODEL_NAME, 
-        content=skill_query_text
-    )['embedding']
+    query_embedding =embed_model_client.embed_query(skill_query_text)
 
     # Embed all documents
-    document_embeddings = embed_model_client.embed_content(
-        model=EMBEDDING_MODEL_NAME, 
-        content=candidate_docs
-    )['embedding']
+    document_embeddings = embed_model_client.embed_query(candidate_docs)
 
 
     # 3. Calculate Cosine Similarity and Rank
