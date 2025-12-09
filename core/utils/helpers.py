@@ -19,7 +19,7 @@ if not GOOGLE_API_KEY:
 
 model = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",
-    generation_config={"temperature": 0.1},
+    temperature= 0.1,
     api_key=GOOGLE_API_KEY
 )
 # --- Helper Functions ---
@@ -59,9 +59,8 @@ def extract_name_and_summary(doc_text: str, doc_id: str) -> Tuple[str, str]:
     """
 
     try:
-        response = model.generate_content(
-            contents=[extraction_prompt],
-            generation_config={"temperature": 0.1}
+        response = model.invoke(
+        extraction_prompt
         )
         
         # Split the response by the delimiter

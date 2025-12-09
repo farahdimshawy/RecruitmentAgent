@@ -54,7 +54,7 @@ def rank_local_candidates(job_description_text: str, candidate_docs: List[str], 
     query_embedding =embed_model_client.embed_query(skill_query_text)
 
     # Embed all documents
-    document_embeddings = embed_model_client.embed_query(candidate_docs)
+    document_embeddings = embed_model_client.embed_documents(candidate_docs)
 
 
     # 3. Calculate Cosine Similarity and Rank
