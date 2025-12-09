@@ -1,4 +1,4 @@
-from langchain_google_genai import GoogleGenerativeAIEmbeddings as genai
+from langchain_openai import OpenAIEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
 import os
 from typing import Tuple
@@ -19,7 +19,7 @@ if not GOOGLE_API_KEY:
 
 model = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",
-    # Pass the key here as a keyword argument
+    generation_config={"temperature": 0.1},
     api_key=GOOGLE_API_KEY
 )
 # --- Helper Functions ---
@@ -29,7 +29,7 @@ def get_embedding_client():
     Returns the configured Gemini Embedding Model client instance.
     Aligned with the user's vector store configuration ('gemini-embedding-001').
     """
-    return genai
+    return OpenAIEmbeddings
 
 def extract_name_and_summary(doc_text: str, doc_id: str) -> Tuple[str, str]:
     """

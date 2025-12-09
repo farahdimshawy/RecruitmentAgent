@@ -4,8 +4,10 @@ from core.utils.helpers import model, extract_name_and_summary
 
 from typing import List, Dict, Optional
 from langchain_google_genai import GoogleGenerativeAIEmbeddings as genai
+from langchain_openai import OpenAIEmbeddings
 
-EMBEDDING_MODEL_NAME = 'gemini-embedding-001'
+
+EMBEDDING_MODEL_NAME = "text-embedding-3-large"
 
 def rank_local_candidates(job_description_text: str, candidate_docs: List[str], k: int = 5) -> List[Dict]:
     """
@@ -45,7 +47,7 @@ def rank_local_candidates(job_description_text: str, candidate_docs: List[str], 
     skill_query_text = query_response.text.strip()
     print(f"[RANKER - LOCAL] Generated Target Query: '{skill_query_text[:80]}...'")
     
-    embed_model_client = genai(
+    embed_model_client = OpenAIEmbeddings(
     model=EMBEDDING_MODEL_NAME
 )
     

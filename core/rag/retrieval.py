@@ -29,16 +29,6 @@ def expand_skills(skills: List[str], k: int = 3) -> Dict[str, List[str]]:
     
     return expansion
 
-# def compute_similarity(skill: str, target: str) -> float:
-
-#     v1 = embeddings.embed_query(skill)
-#     v2 = embeddings.embed_query(target)
-
-#     dot = sum(a*b for a,b in zip(v1,v2))
-#     norm1 = sum(a*a for a in v1) ** 0.5
-#     norm2 = sum(a*a for a in v2) ** 0.5
-
-#     return dot / (norm1 * norm2 + 1e-9)
 
 def score_resume_against_job(resume_skills, job_skills, k=3):
     scores = []
