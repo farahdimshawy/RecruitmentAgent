@@ -1,20 +1,19 @@
 from core.rag.vectorstore import retrieve_vector_data, RECRUITMENT_DOCS_INDEX_NAME
 from core.evaluator.skill_matcher import get_matching_skills
-from core.utils.helpers import model, extract_name_and_summary
+from core.utils.helpers import model, extract_name_and_summary, LocalLLamaEmbeddings
 
 from typing import List, Dict, Optional
-from langchain_google_genai import GoogleGenerativeAIEmbeddings as genai
-from langchain_openai import OpenAIEmbeddings
+
 
 import time
 
-# Define your desired batch size (e.g., 50 documents at a time)
-BATCH_SIZE = 50 
-# Define a small delay (e.g., 1 second) to ensure limits are not breached
-DELAY_SECONDS = 1 
+# # Define your desired batch size (e.g., 50 documents at a time)
+# BATCH_SIZE = 50 
+# # Define a small delay (e.g., 1 second) to ensure limits are not breached
+# DELAY_SECONDS = 1 
 
 
-EMBEDDING_MODEL_NAME = "text-embedding-3-large"
+# EMBEDDING_MODEL_NAME = "text-embedding-3-large"
 
 def rank_local_candidates(job_description_text: str, candidate_docs: List[str], k: int = 5) -> List[Dict]:
     """
@@ -54,26 +53,26 @@ def rank_local_candidates(job_description_text: str, candidate_docs: List[str], 
     skill_query_text = query_response.text.strip()
     print(f"[RANKER - LOCAL] Generated Target Query: '{skill_query_text[:80]}...'")
     
-    embed_model_client = OpenAIEmbeddings(
-    model=EMBEDDING_MODEL_NAME
-)
-    
+#     embed_model_client = OpenAIEmbeddings(
+#     model=EMBEDDING_MODEL_NAME
+# )
+    embed_model_client = LocalLLamaEmbeddings()
     query_embedding =embed_model_client.embed_query(skill_query_text)
 
     # Embed all documents
     document_embeddings = []
 
-    for i in range(0, len(candidate_docs), BATCH_SIZE):
-        batch = candidate_docs[i:i + BATCH_SIZE]
+    # for i in range(0, len(candidate_docs), BATCH_SIZE):
+    #     batch = candidate_docs[i:i + BATCH_SIZE]
         
-        # ⚠️ This is the line that calls the OpenAI API for a batch
-        batch_embeddings = embed_model_client.embed_documents(batch)
-        document_embeddings.extend(batch_embeddings)
+    #     # ⚠️ This is the line that calls the OpenAI API for a batch
+    #     batch_embeddings = embed_model_client.embed_documents(batch)
+    #     document_embeddings.extend(batch_embeddings)
         
-        print(f"Embedded documents {i} to {i + len(batch)}. Waiting...")
-        # Wait to avoid hitting the RPM/TPM limit
-    time.sleep(DELAY_SECONDS)
-    #document_embeddings = embed_model_client.embed_documents(candidate_docs)
+    #     print(f"Embedded documents {i} to {i + len(batch)}. Waiting...")
+    #     # Wait to avoid hitting the RPM/TPM limit
+    # time.sleep(DELAY_SECONDS)
+    document_embeddings = embed_model_client.embed_documents(candidate_docs)
 
 
     # 3. Calculate Cosine Similarity and Rank

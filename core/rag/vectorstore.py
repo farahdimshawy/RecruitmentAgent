@@ -2,8 +2,7 @@ import os
 from pinecone import Pinecone, ServerlessSpec
 from typing import Dict, Any, Union
 
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_openai import OpenAIEmbeddings
+from core.utils.helpers import LocalLlamaEmbeddings
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -16,15 +15,15 @@ RECRUITMENT_DOCS_INDEX_NAME = os.environ.get("DOCS_INDEX_NAME")
 SKILLS_INDEX_NAME = os.environ.get("SKILLS_INDEX_NAME")
 DEFAULT_INDEX_NAME = RECRUITMENT_DOCS_INDEX_NAME
 
-EMBED_DIM = 3072 # Gemini embedding dimension
-EMBEDDINGS_MODEL = "text-embedding-3-large" 
+# EMBED_DIM = 3072 # Gemini embedding dimension
+# EMBEDDINGS_MODEL = "text-embedding-3-large" 
 
 
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
 
-embeddings = OpenAIEmbeddings(model=EMBEDDINGS_MODEL)
-
+# embeddings = OpenAIEmbeddings(model=EMBEDDINGS_MODEL)
+embeddings = LocalLlamaEmbeddings()
 print("Pinecone client and Embeddings initialized successfully.")
 
 

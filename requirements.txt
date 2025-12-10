@@ -114,6 +114,11 @@ tqdm==4.67.1
 traits==7.0.2
 typing-inspection==0.4.2
 typing_extensions==4.15.0
+torch>=2.1.2,<2.4
+transformers>=4.38.0,<4.46.0
+sentencepiece>=0.1.99
+accelerate>=0.26.0,<1.0.0
+
 tzdata==2025.2
 uritemplate==4.2.0
 urllib3==2.5.0
