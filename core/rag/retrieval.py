@@ -1,6 +1,3 @@
-from core.utils.helpers import model
-from core.utils.to_native import to_native
-import os
 from typing import List, Dict, Any
 
 from langchain_core.documents import Document
@@ -8,9 +5,8 @@ from langchain_core.documents import Document
 # Import vectorstore & embeddings from your module
 from .vectorstore import (
     get_vectorstore,
-    embeddings,
-    retrieve,
-    retrieve_raw
+    retrieve_vector_data,
+   #retrieve_raw
 )
 
 def retrieve_context(query: str, k: int = 5) ->List[Document]:
@@ -80,4 +76,4 @@ def debug_raw(query: str, k: int = 5):
     """
     Useful for debugging what the Pinecone index is storing.
     """
-    return retrieve_raw(query, k=k)
+    return retrieve_vector_data(query, k=k)

@@ -1,5 +1,5 @@
 from core.rag.vectorstore import (
-    add_documents,
+    add_document,
     retrieve_context,
     get_vectorstore,
     clear_index
@@ -22,7 +22,8 @@ docs = [
     "Project management uses tools like Jira and Agile methodologies."
 ]
 
-add_documents(docs)
+for d in docs:
+    add_document(d)
 print("Documents added successfully!")
 
 # 3. Retrieve similar content

@@ -26,49 +26,50 @@ model = ChatGoogleGenerativeAI(
     api_key=GOOGLE_API_KEY
 )
 # --- Helper Functions ---
-class LocalLlamaEmbeddings(Embeddings):
-    def __init__(
-        self,
-        model_name="meta-llama/Llama-3.2-3B",
-        device=None,
-        max_length=512
-    ):
-        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-        self.max_length = max_length
+# # class LocalLlamaEmbeddings(Embeddings):
+#     def __init__(
+#         self,
+#         model_name="meta-llama/Llama-3.2-3B",
+#         device=None,
+#         max_length=512
+#     ):
+#         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+#         self.max_length = max_length
 
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModel.from_pretrained(
-            model_name,
-            torch_dtype=torch.float16 if self.device == "cuda" else torch.float32
-        ).to(self.device)
+#         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+#         self.model = AutoModel.from_pretrained(
+#             model_name,
+#             torch_dtype=torch.float16 if self.device == "cuda" else torch.float32
+#         ).to(self.device)
 
-        self.model.eval()
+#         self.model.eval()
 
-    def _embed(self, texts):
-        inputs = self.tokenizer(
-            texts,
-            padding=True,
-            truncation=True,
-            max_length=self.max_length,
-            return_tensors="pt"
-        ).to(self.device)
+#     def _embed(self, texts):
+#         inputs = self.tokenizer(
+#             texts,
+#             padding=True,
+#             truncation=True,
+#             max_length=self.max_length,
+#             return_tensors="pt"
+#         ).to(self.device)
 
-        with torch.no_grad():
-            outputs = self.model(**inputs)
+#         with torch.no_grad():
+#             outputs = self.model(**inputs)
 
-        # Mean pooling → 3072 dims
-        embeddings = outputs.last_hidden_state.mean(dim=1)
+#         # Mean pooling → 3072 dims
+#         embeddings = outputs.last_hidden_state.mean(dim=1)
 
-        # Normalize for cosine similarity
-        embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
+#         # Normalize for cosine similarity
+#         embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
 
-        return embeddings.cpu().tolist()
+#         return embeddings.cpu().tolist()
 
-    def embed_documents(self, texts):
-        return self._embed(texts)
+#     def embed_documents(self, texts):
+#         return self._embed(texts)
 
-    def embed_query(self, text):
-        return self._embed([text])[0]
+#     def embed_query(self, text):
+#         return self._embed([text])[0]
+
 # def get_embedding_client():
 #     """
 #     Returns the configured Gemini Embedding Model client instance.

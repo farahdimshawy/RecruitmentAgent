@@ -1,6 +1,9 @@
 from core.rag.vectorstore import retrieve_vector_data, RECRUITMENT_DOCS_INDEX_NAME
 from core.evaluator.skill_matcher import get_matching_skills
-from core.utils.helpers import model, extract_name_and_summary, LocalLLamaEmbeddings
+from core.utils.helpers import model, extract_name_and_summary #, LocalLLamaEmbeddings
+
+from langchain_huggingface import HuggingFaceEmbeddings
+
 
 from typing import List, Dict, Optional
 
@@ -13,7 +16,7 @@ import time
 # DELAY_SECONDS = 1 
 
 
-# EMBEDDING_MODEL_NAME = "text-embedding-3-large"
+EMBEDDINGS_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
 def rank_local_candidates(job_description_text: str, candidate_docs: List[str], k: int = 5) -> List[Dict]:
     """
@@ -56,7 +59,10 @@ def rank_local_candidates(job_description_text: str, candidate_docs: List[str], 
 #     embed_model_client = OpenAIEmbeddings(
 #     model=EMBEDDING_MODEL_NAME
 # )
-    embed_model_client = LocalLLamaEmbeddings()
+    embed_model_client =  HuggingFaceEmbeddings(
+    model_name=EMBEDDING_MODEL_NAME
+)
+
     query_embedding =embed_model_client.embed_query(skill_query_text)
 
     # Embed all documents

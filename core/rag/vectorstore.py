@@ -2,7 +2,9 @@ import os
 from pinecone import Pinecone, ServerlessSpec
 from typing import Dict, Any, Union
 
-from core.utils.helpers import LocalLlamaEmbeddings
+# from core.utils.helpers import LocalLlamaEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_pinecone import PineconeVectorStore
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -15,19 +17,32 @@ RECRUITMENT_DOCS_INDEX_NAME = os.environ.get("DOCS_INDEX_NAME")
 SKILLS_INDEX_NAME = os.environ.get("SKILLS_INDEX_NAME")
 DEFAULT_INDEX_NAME = RECRUITMENT_DOCS_INDEX_NAME
 
-# EMBED_DIM = 3072 # Gemini embedding dimension
-# EMBEDDINGS_MODEL = "text-embedding-3-large" 
+EMBED_DIM = 384 # Gemini embedding dimension
+EMBEDDINGS_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
 
 # embeddings = OpenAIEmbeddings(model=EMBEDDINGS_MODEL)
-embeddings = LocalLlamaEmbeddings()
+embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
 print("Pinecone client and Embeddings initialized successfully.")
 
 
-
+def get_vectorstore(index_name: str = DEFAULT_INDEX_NAME) -> Union[Any, None]:
+    """
+    Returns the Pinecone index as a vectorstore object.
+    """
+    index = _get_or_create_index(index_name)
+    if index is None:
+        print(f"Failed to connect to index {index_name}.")
+        return None
+    vectorstore = PineconeVectorStore(
+    index=index,
+    embedding=embeddings,
+    text_key="text"   # MUST match what you upserted
+    )
+    return vectorstore
 
 def _get_or_create_index(name: str) -> Union[Any, None]:
     """
