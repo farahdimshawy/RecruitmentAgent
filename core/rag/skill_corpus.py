@@ -1,8 +1,9 @@
 from typing import Dict, Any
 import time
 
-from core.rag.vectorstore import add_document, SKILLS_INDEX_NAME 
+from core.rag.vectorstore import add_document, SKILLS_INDEX_NAME, clear_index 
 
+clear_index(SKILLS_INDEX_NAME)
 DOMAIN_CANONICAL_SKILLS: Dict[str, Dict[str, Dict[str, Any]]] = {
     
     # 1. TECHNOLOGY DOMAIN
@@ -124,73 +125,201 @@ DOMAIN_CANONICAL_SKILLS: Dict[str, Dict[str, Dict[str, Any]]] = {
 }
 
 
-# --- Pipeline Function ---
-def build_skill_corpus():
+# # --- Pipeline Function ---
+# def build_skill_corpus():
+#     """
+#     Builds the Skill Corpus index by iterating over domain and sub-domain definitions,
+#     and indexing each skill with appropriate metadata tags for filtering.
+#     """
+    
+#     print(f"Starting to build Skill Corpus into index: '{SKILLS_INDEX_NAME}'...")
+#     total_skills_indexed = 0
+    
+#     # Check total skills to index
+#     for domain, sub_domains in DOMAIN_CANONICAL_SKILLS.items():
+#         for sub_domain, skills_dict in sub_domains.items():
+#             total_skills_indexed += len(skills_dict)
+            
+#     print(f"Total skills to index across all domains: {total_skills_indexed}")
+#     indexed_count = 0
+    
+#     for domain, sub_domains in DOMAIN_CANONICAL_SKILLS.items():
+#         print(f"\n--- Indexing Domain: {domain} ---")
+        
+#         for sub_domain, skills_dict in sub_domains.items():
+#             print(f"  --- Indexing Sub-Domain: {sub_domain} ({len(skills_dict)} skills) ---")
+            
+#             for skill_id, skill_data in skills_dict.items():
+                
+#                 canonical_name = skill_data['canonical_name']
+#                 description = skill_data['description']
+#                 keywords = ", ".join(skill_data['keywords'])
+#                 weight = skill_data['weight']
+
+#                 # 1. CREATE AUGMENTED CHUNK for the Skill
+#                 vector_content = f"""
+#                 CANONICAL SKILL ID: {skill_id}
+#                 DOMAIN: {domain}
+#                 SUB-DOMAIN: {sub_domain}
+#                 NAME: {canonical_name}
+#                 DESCRIPTION: {description}
+#                 RELATED TERMS/SYNONYMS: {keywords}
+#                 """
+                
+#                 # 2. METADATA (CRITICAL: Store both domain and sub_domain for filtering)
+#                 metadata = {
+#                     "canonical_name": canonical_name,
+#                     "weight": weight,
+#                     "skill_id": skill_id,
+#                     "domain": domain,
+#                     "sub_domain": sub_domain 
+#                 }
+
+#                 # 3. EMBED & STORE
+#                 try:
+#                     add_document(
+#                         id=skill_id, 
+#                         content=vector_content.strip(), 
+#                         metadata=metadata,
+#                         index_name=SKILLS_INDEX_NAME
+#                     )
+                    
+#                     indexed_count += 1
+#                     print(f"[{indexed_count}/{total_skills_indexed}] SUCCESS: {domain}/{sub_domain} Skill: {canonical_name} (Weight: {weight})")
+#                     time.sleep(0.5) 
+                    
+#                 except Exception as e:
+#                     print(f"[ERROR] indexing skill {skill_id}: {e}")
+
+#     print(f"\n--- Skill Corpus Build Complete. Total Skills Indexed: {indexed_count} ---")
+from typing import Dict, Any, List
+import time
+
+from core.rag.vectorstore import add_document, SKILLS_INDEX_NAME
+
+# --- your DOMAIN_CANONICAL_SKILLS stays the same ---
+
+
+def _normalize_keywords(keywords: List[str]) -> List[str]:
+    """Deduplicate + normalize keyword list."""
+    seen = set()
+    out = []
+    for k in keywords or []:
+        kk = " ".join(str(k).split()).strip()
+        if not kk:
+            continue
+        key = kk.lower()
+        if key not in seen:
+            seen.add(key)
+            out.append(kk)
+    return out
+
+
+def _make_embedding_text(
+    skill_id: str,
+    canonical_name: str,
+    description: str,
+    keywords: List[str],
+) -> str:
+    """
+    Create the text that will be embedded and stored in Pinecone.
+
+    Goals:
+    - match real job description language
+    - remove noisy labels (DOMAIN:, ID:, etc.)
+    - include synonyms/keywords in natural-ish form
+    """
+    keywords = _normalize_keywords(keywords)
+
+    # A few helpful variants for matching real JDs
+    # (keep it short; too much repetition can also hurt)
+    keyword_line = ", ".join(keywords)
+    short_aliases = " / ".join(keywords[:4]) if keywords else ""
+
+    parts = [
+        canonical_name.strip(),
+        description.strip(),
+    ]
+
+    if keyword_line:
+        parts.append(f"Key terms: {keyword_line}.")
+    if short_aliases:
+        parts.append(f"Also known as: {short_aliases}.")
+
+    # Optional: include the skill_id once (not as a label) for traceability
+    parts.append(f"Skill code {skill_id}.")
+
+    return " ".join(p for p in parts if p).strip()
+
+
+def build_skill_corpus(sleep_seconds: float = 0.15):
     """
     Builds the Skill Corpus index by iterating over domain and sub-domain definitions,
-    and indexing each skill with appropriate metadata tags for filtering.
+    and indexing each skill with metadata tags for filtering.
+
+    Changes vs your original:
+    - embedding content is now semantic (name/description/keywords), not label-heavy
+    - metadata keeps domain/subdomain/weight/etc. for filtering + scoring
     """
-    
     print(f"Starting to build Skill Corpus into index: '{SKILLS_INDEX_NAME}'...")
-    total_skills_indexed = 0
-    
-    # Check total skills to index
-    for domain, sub_domains in DOMAIN_CANONICAL_SKILLS.items():
-        for sub_domain, skills_dict in sub_domains.items():
-            total_skills_indexed += len(skills_dict)
-            
-    print(f"Total skills to index across all domains: {total_skills_indexed}")
+
+    total_skills = sum(
+        len(skills_dict)
+        for sub_domains in DOMAIN_CANONICAL_SKILLS.values()
+        for skills_dict in sub_domains.values()
+    )
+    print(f"Total skills to index across all domains: {total_skills}")
+
     indexed_count = 0
-    
+
     for domain, sub_domains in DOMAIN_CANONICAL_SKILLS.items():
         print(f"\n--- Indexing Domain: {domain} ---")
-        
+
         for sub_domain, skills_dict in sub_domains.items():
             print(f"  --- Indexing Sub-Domain: {sub_domain} ({len(skills_dict)} skills) ---")
-            
-            for skill_id, skill_data in skills_dict.items():
-                
-                canonical_name = skill_data['canonical_name']
-                description = skill_data['description']
-                keywords = ", ".join(skill_data['keywords'])
-                weight = skill_data['weight']
 
-                # 1. CREATE AUGMENTED CHUNK for the Skill
-                vector_content = f"""
-                CANONICAL SKILL ID: {skill_id}
-                DOMAIN: {domain}
-                SUB-DOMAIN: {sub_domain}
-                NAME: {canonical_name}
-                DESCRIPTION: {description}
-                RELATED TERMS/SYNONYMS: {keywords}
-                """
-                
-                # 2. METADATA (CRITICAL: Store both domain and sub_domain for filtering)
+            for skill_id, skill_data in skills_dict.items():
+                canonical_name = skill_data["canonical_name"]
+                description = skill_data["description"]
+                keywords = skill_data.get("keywords", [])
+                weight = skill_data.get("weight", 1.0)
+
+                # ✅ New: retrieval-friendly embedding text
+                vector_content = _make_embedding_text(
+                    skill_id=skill_id,
+                    canonical_name=canonical_name,
+                    description=description,
+                    keywords=keywords,
+                )
+
+                # ✅ Keep structured fields in metadata (best for filters)
                 metadata = {
                     "canonical_name": canonical_name,
+                    "description": description,          # keep for display
+                    "keywords": _normalize_keywords(keywords),  # keep for UI/debug
                     "weight": weight,
                     "skill_id": skill_id,
                     "domain": domain,
-                    "sub_domain": sub_domain 
+                    "sub_domain": sub_domain,
                 }
 
-                # 3. EMBED & STORE
                 try:
                     add_document(
-                        id=skill_id, 
-                        content=vector_content.strip(), 
+                        id=skill_id,
+                        content=vector_content,
                         metadata=metadata,
-                        index_name=SKILLS_INDEX_NAME
+                        index_name=SKILLS_INDEX_NAME,
                     )
-                    
                     indexed_count += 1
-                    print(f"[{indexed_count}/{total_skills_indexed}] SUCCESS: {domain}/{sub_domain} Skill: {canonical_name} (Weight: {weight})")
-                    time.sleep(0.5) 
-                    
+                    print(f"[{indexed_count}/{total_skills}] SUCCESS: {domain}/{sub_domain} -> {canonical_name} (Weight: {weight})")
+                    if sleep_seconds:
+                        time.sleep(sleep_seconds)
+
                 except Exception as e:
                     print(f"[ERROR] indexing skill {skill_id}: {e}")
 
     print(f"\n--- Skill Corpus Build Complete. Total Skills Indexed: {indexed_count} ---")
+
 
 if __name__ == "__main__":
     build_skill_corpus()

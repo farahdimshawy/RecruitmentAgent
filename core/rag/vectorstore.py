@@ -40,7 +40,7 @@ def get_vectorstore(index_name: str = DEFAULT_INDEX_NAME) -> Union[Any, None]:
     vectorstore = PineconeVectorStore(
     index=index,
     embedding=embeddings,
-    text_key="text"   # MUST match what you upserted
+    text_key="content"   # MUST match what you upserted
     )
     return vectorstore
 
@@ -116,6 +116,8 @@ def retrieve_vector_data(query: str, k: int = 5, index_name: str = DEFAULT_INDEX
         return {"matches": []}
 
     index = _get_or_create_index(index_name)
+    stats = index.describe_index_stats()
+    print("STATS:", stats)
     if index is None:
         return {"matches": []}
     
@@ -129,6 +131,8 @@ def retrieve_vector_data(query: str, k: int = 5, index_name: str = DEFAULT_INDEX
             include_metadata=True,
             filter=filter if filter else {}
         )
+        if hasattr(results, "to_dict"):
+            results = results.to_dict()
         return results
 
     except Exception as e:

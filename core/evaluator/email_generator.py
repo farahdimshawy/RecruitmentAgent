@@ -4,6 +4,7 @@ from typing import Dict, Any
 from core.evaluator.ranker import rank_candidates # Import the ranker to get data
 from core.utils.helpers import model 
 from google.api_core.exceptions import GoogleAPIError
+from langchain_core.messages import SystemMessage, HumanMessage
 
 from dotenv import load_dotenv
 
@@ -59,24 +60,32 @@ def generate_outreach_email(job_description: str, candidate_data: Dict[str, Any]
     max_retries = 3
     for attempt in range(max_retries):
         try:
-            email_agent = model.start_chat(history=[
-            {"role": "system", "parts": [system_prompt]}
-        ])
-
-            response = model.invoke(
-                user_prompt
-            )
-
-            # Clean up the output slightly
-            return response.text.strip()
-            
-        except GoogleAPIError as e:
-            wait_time = 2 ** attempt
-            print(f"API Error (Attempt {attempt+1}): {e}. Retrying in {wait_time}s...")
-            time.sleep(wait_time)
+            response = model.invoke([
+                SystemMessage(content=system_prompt),
+                HumanMessage(content=user_prompt)
+            ])
+            return response.content.strip()
         except Exception as e:
-            print(f"General Error during email generation: {e}")
-            break
+            print(f"Error: {e}")
+            return "Error generating email."
+        #     email_agent = model.start_chat(history=[
+        #     {"role": "system", "parts": [system_prompt]}
+        # ])
+
+        #     response = model.invoke(
+        #         user_prompt
+        #     )
+
+        #     # Clean up the output slightly
+        #     return response.text.strip()
+            
+        # except GoogleAPIError as e:
+        #     wait_time = 2 ** attempt
+        #     print(f"API Error (Attempt {attempt+1}): {e}. Retrying in {wait_time}s...")
+        #     time.sleep(wait_time)
+        # except Exception as e:
+        #     print(f"General Error during email generation: {e}")
+        #     break
             
     return "Error: Could not generate email after multiple retries."
 

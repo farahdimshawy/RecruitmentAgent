@@ -59,6 +59,7 @@ def rank_local_candidates(job_description_text: str, candidate_docs: List[str], 
 #     embed_model_client = OpenAIEmbeddings(
 #     model=EMBEDDING_MODEL_NAME
 # )
+    EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
     embed_model_client =  HuggingFaceEmbeddings(
     model_name=EMBEDDING_MODEL_NAME
 )
@@ -140,7 +141,7 @@ def rank_candidates(job_description_text: str, k: int = 5, candidate_docs: Optio
     matching_skills = get_matching_skills(
         job_description_text=job_description_text, 
         k=15, 
-        score_threshold=0.70
+        score_threshold=0.3
     )
 
     if not matching_skills:

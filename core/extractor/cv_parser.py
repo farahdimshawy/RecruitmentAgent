@@ -184,7 +184,7 @@ def cv_parser(text: str) -> Optional[Dict[str, Any]]:
     """
     # 1. Initialize the LangChain LLM (Gemini)
     # The API key will be read from the GEMINI_API_KEY environment variable.
-    model = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.0)
+    model = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite", temperature=0.0)
 
     # 2. Bind the structured output schema to the model
     # This tells the model to ONLY return data conforming to the ExtractCVDetails class.

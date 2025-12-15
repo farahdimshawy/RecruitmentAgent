@@ -39,7 +39,7 @@ def gem_json_job_langchain(job_text: str) -> Optional[Dict[str, Any]]:
     
     # 1. Initialize the LangChain LLM (Gemini)
     # Ensure your GEMINI_API_KEY environment variable is set.
-    model = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.0)
+    model = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite", temperature=0.0)
 
     # 2. Bind the structured output schema to the model
     # This automatically configures the LLM to use the Pydantic schema for output.
